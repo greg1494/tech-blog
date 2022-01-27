@@ -1,41 +1,57 @@
 const router = require('express').Router();
+const withAuth = require('../../utils/auth');
 const { User, Post, Comment } = require('../../models');
 
-/*
-// GET /api/users
+// get all users
 router.get('/', (req, res) => {
-    // Access our User model and run .findAll() method)
     User.findAll({
-        attributes: { exclude: ['password'] }
+      attributes: { exclude: ['password'] }
     })
-        .then(dbUserData => res.json(dbUserData))
-        .catch(err => {
-            console.log(err);
-            res.status(500).json(err);
-        });
-});
-
-// Get /api/users/1
-router.get('/:id', (req, res) => {
-    User.findOne({
-        attributes: { exclude: ['password'] },
-        where: {
-            id: req.params.id
-        }
-    })
-    .then(dbUserData => {
-        if (!dbUserData) {
-            res.status(404).json({ message: 'No user found with this id' });
-            return;
-        }
-        res.json(dbUserData);
-    })
-    .catch(err => {
+      .then(dbUserData => res.json(dbUserData))
+      .catch(err => {
         console.log(err);
         res.status(500).json(err);
-    });
-});
-*/
+      });
+  });
+  
+  router.get('/:id', (req, res) => {
+    User.findOne({
+      attributes: { exclude: ['password'] },
+      where: {
+        id: req.params.id
+      },
+      include: [
+        {
+          model: Post,
+          attributes: ['id', 'title', 'content', 'created_at']
+        },
+        {
+          model: Comment,
+          attributes: ['id', 'comment_text', 'created_at'],
+          include: {
+            model: Post,
+            attributes: ['title']
+          }
+        },
+        {
+          model: Post,
+          attributes: ['title']
+        }
+      ]
+    })
+      .then(dbUserData => {
+        if (!dbUserData) {
+          res.status(404).json({ message: 'No user found with this id' });
+          return;
+        }
+        res.json(dbUserData);
+      })
+      .catch(err => {
+        console.log(err);
+        res.status(500).json(err);
+      });
+  });
+  
 
 // Post /api/user
 router.post('/', (req, res) => {
@@ -59,7 +75,7 @@ router.post('/', (req, res) => {
         });
 });
 
-router.post('/login', (req, res) => {
+router.post('/login', withAuth, (req, res) => {
   User.findOne({
     where: {
       username: req.body.username
@@ -89,7 +105,7 @@ router.post('/login', (req, res) => {
   });
 });
 
-router.post('/logout', (req, res) => {
+router.post('/logout', withAuth, (req, res) => {
     if (req.session.loggedIn) {
         req.session.destroy(() => {
             res.status(204).end();
@@ -101,7 +117,7 @@ router.post('/logout', (req, res) => {
 
 
 
-router.put('/:id', (req, res) => {
+router.put('/:id', withAuth, (req, res) => {
     User.update(req.body, {
         individualHooks: true,
         where: {
@@ -122,7 +138,7 @@ router.put('/:id', (req, res) => {
 });
 
 
-router.delete('/:id', (req, res) => {
+router.delete('/:id', withAuth, (req, res) => {
     User.destroy({
         where: {
             id: req.params.id
