@@ -16,11 +16,11 @@ async function signupFormHandler (event) {
   
       if (response.ok) {
         console.log('success');
-        document.location.replace('/');
+        document.location.replace('/dashboard/');
       } else {
         alert(response.statusText);
       }
     }
 };
 
-document.querySelector('#signup-form').addEventListener('submit', signupFormHandler);
+document.querySelector('.signup-form').addEventListener('submit', signupFormHandler);
